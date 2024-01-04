@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 2.8.12...3.10)
 
 # Define the project
-project(tallium C)
+project(cte C)
 
 # Import our local cmake Modules (if any)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules")
@@ -14,22 +14,22 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 # with -DCMAKE_BUILD_TYPE=<type> where <type> is one of: Debug, Release or RelWithDebInfo
 if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
     message(STATUS "Build type defaulting to Debug. Change to Relese or RelWithDebInfo with -DCMAKE_BUILD_TYPE=<choise>")
-    set(TALLIUM_TMP_BUILD_TYPE "Debug")
+    set(CTE_TMP_BUILD_TYPE "Debug")
 else()
-   set(TALLIUM_TMP_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+   set(CTE_TMP_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
 endif ()
-set(CMAKE_BUILD_TYPE "${TALLIUM_TMP_BUILD_TYPE}" CACHE STRING "Choose the type of build. Options are: Debug, Release or RelWithDebInfo" FORCE)
+set(CMAKE_BUILD_TYPE "${CTE_TMP_BUILD_TYPE}" CACHE STRING "Choose the type of build. Options are: Debug, Release or RelWithDebInfo" FORCE)
 
-# Option for how to link to libtorium. Options are: Submodule, Static or Dynamic.
+# Option for how to link to libctl. Options are: Submodule, Static or Dynamic.
 # Defaults to Submodule if not set
-if(NOT DEFINED LIBTORIUM_LINK_TYPE)
-    #message(STATUS "Defaulting to building libtorium as a static library. Change to shared with -DTORIUM_SHARED_LIBS=ON")
-    message(STATUS "Linking to libtorium defaulting to Submodule. Change to Static or Dynamic with -DLIBTORIUM_LINK_TYPE=<linktype>")
-    set(TOLIBTORIUM_LINK_TYPE_TMP "Submodule")
+if(NOT DEFINED LIBCTL_LINK_TYPE)
+    #message(STATUS "Defaulting to building libctl as a static library. Change to shared with -DTORIUM_SHARED_LIBS=ON")
+    message(STATUS "Linking to libctl defaulting to Submodule. Change to Static or Dynamic with -DLIBCTL_LINK_TYPE=<linktype>")
+    set(LIBCTL_LINK_TYPE_TMP "Submodule")
 else()
-    set(TOLIBTORIUM_LINK_TYPE_TMP ${LIBTORIUM_LINK_TYPE})
+    set(LIBCTL_LINK_TYPE_TMP ${LIBCTL_LINK_TYPE})
 endif()
-set(LIBTORIUM_LINK_TYPE ${TOLIBTORIUM_LINK_TYPE_TMP} CACHE STRING "Choose how to link to libtorium. Options are: Submodule, Static or Dynamic" FORCE)
+set(LIBCTL_LINK_TYPE ${LIBCTL_LINK_TYPE_TMP} CACHE STRING "Choose how to link to libctl. Options are: Submodule, Static or Dynamic" FORCE)
 
 # We need the PkgConfig cmake module to be able to find libraries we depend on
 find_package(PkgConfig REQUIRED)
@@ -46,44 +46,55 @@ if(NOT TARGET uninstall)
 endif()
 
 # Define a target for our program
-add_executable(tallium src/tallium.c)
+add_executable(cte src/cte.c)
 
-# Add compile and link options to our target
-target_compile_options(tallium PRIVATE -Wall)
-target_compile_options(tallium PRIVATE -Wextra)
-target_compile_options(tallium PRIVATE -Wpedantic)
-target_compile_options(tallium PRIVATE -fanalyzer)
-target_compile_options(tallium PRIVATE -Wanalyzer-too-complex)
-#target_compile_options(tallium PRIVATE -pg)
-#target_link_options(tallium PRIVATE -pg)
-
-# Add libtorium to our program depending on how to link
-if(LIBTORIUM_LINK_TYPE STREQUAL "Submodule")
-    set(TORIUM_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-    mark_as_advanced(TORIUM_SHARED_LIBS)
-    add_subdirectory(torium EXCLUDE_FROM_ALL)
-    set(TORIUM_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/torium/src)
-    set(TORIUM_LIBRARY_DIRS "")
-    set(TORIUM_LIBRARIES torium)
-elseif(LIBTORIUM_LINK_TYPE STREQUAL "Static")
-    pkg_check_modules(TORIUM REQUIRED libtorium-static>=1)
-elseif(LIBTORIUM_LINK_TYPE STREQUAL "Dynamic")
-    pkg_check_modules(TORIUM REQUIRED libtorium>=1)
+# Add compile and link options to our target. We differentiate between gcc and clang
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_VERSION VERSION_LESS "3.1")
+        target_compile_options(cte PRIVATE -std=gnu${CMAKE_C_STANDARD})
+    endif()
+    target_compile_options(cte PRIVATE -Wall)
+    target_compile_options(cte PRIVATE -Wextra)
+    target_compile_options(cte PRIVATE -pedantic)
+    #target_compile_options(cte PRIVATE -pg)
+    #target_link_options(cte PRIVATE -pg)
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_VERSION VERSION_LESS "3.1")
+        target_compile_options(cte PRIVATE -std=gnu${CMAKE_C_STANDARD})
+    endif()
+    target_compile_options(cte PRIVATE -Wall)
+    target_compile_options(cte PRIVATE -Wextra)
+    target_compile_options(cte PRIVATE -Wpedantic)
 else()
-    message(FATAL_ERROR "LIBTORIUM_LINK_TYPE set to unknown value: ${LIBTORIUM_LINK_TYPE}")
 endif()
-target_include_directories(tallium PUBLIC ${TORIUM_INCLUDE_DIRS})
-target_link_directories(tallium PUBLIC ${TORIUM_LIBRARY_DIRS})
-target_link_libraries(tallium ${TORIUM_LIBRARIES})
+
+# Add libctl to our program depending on how to link
+if(LIBCTL_LINK_TYPE STREQUAL "Submodule")
+    set(CTL_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    mark_as_advanced(CTL_SHARED_LIBS)
+    add_subdirectory(ctl EXCLUDE_FROM_ALL)
+    set(CTL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/ctl/include)
+    set(CTL_LIBRARY_DIRS "")
+    set(CTL_LIBRARIES ctl)
+elseif(LIBCTL_LINK_TYPE STREQUAL "Static")
+    pkg_check_modules(CTL REQUIRED libctl-static>=1)
+elseif(LIBCTL_LINK_TYPE STREQUAL "Dynamic")
+    pkg_check_modules(CTL REQUIRED libctl>=1)
+else()
+    message(FATAL_ERROR "LIBCTL_LINK_TYPE set to unknown value: ${LIBCTL_LINK_TYPE}")
+endif()
+target_include_directories(cte PUBLIC ${CTL_INCLUDE_DIRS})
+target_link_directories(cte PUBLIC ${CTL_LIBRARY_DIRS})
+target_link_libraries(cte ${CTL_LIBRARIES})
 
 # Add support for installing our program
-install(TARGETS tallium RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
+install(TARGETS cte RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
 
 # Dump our config for review
-message(STATUS "The following build options will be used for tallium:")
+message(STATUS "The following build options will be used for cte:")
 message(STATUS "    CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
-message(STATUS "    CMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}")
-message(STATUS "    CMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}")
+message(STATUS "    CMAKE_C_COMPILER_ID=${CMAKE_C_COMPILER_ID}")
+message(STATUS "    CMAKE_C_COMPILER_VERSION=${CMAKE_C_COMPILER_VERSION}")
 message(STATUS "    BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
 message(STATUS "    CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
 message(STATUS "    CMAKE_INSTALL_FULL_INCLUDEDIR=${CMAKE_INSTALL_FULL_INCLUDEDIR}")
@@ -93,4 +104,3 @@ message(STATUS "    CMAKE_INSTALL_FULL_SYSCONFDIR=${CMAKE_INSTALL_FULL_SYSCONFDI
 message(STATUS "    CMAKE_INSTALL_FULL_DATAROOTDIR=${CMAKE_INSTALL_FULL_DATAROOTDIR}")
 message(STATUS "    CMAKE_INSTALL_FULL_LOCALSTATEDIR=${CMAKE_INSTALL_FULL_LOCALSTATEDIR}")
 message(STATUS "    CMAKE_INSTALL_FULL_DOCDIR=${CMAKE_INSTALL_FULL_DOCDIR}")
-
