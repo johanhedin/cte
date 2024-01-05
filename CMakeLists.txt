@@ -20,16 +20,16 @@ else()
 endif ()
 set(CMAKE_BUILD_TYPE "${CTE_TMP_BUILD_TYPE}" CACHE STRING "Choose the type of build. Options are: Debug, Release or RelWithDebInfo" FORCE)
 
-# Option for how to link to libctl. Options are: Submodule, Static or Dynamic.
+# Option for how to link to libctl. Options are: Submodule, Static or Shared.
 # Defaults to Submodule if not set
 if(NOT DEFINED CTE_LIBCTL_LINK_MODE)
     #message(STATUS "Defaulting to building libctl as a static library. Change to shared with -DTORIUM_SHARED_LIBS=ON")
-    message(STATUS "Linking to libctl defaulting to Submodule. Change to Static or Dynamic with -DCTE_LIBCTL_LINK_MODE=<choise>")
+    message(STATUS "Linking to libctl defaulting to Submodule. Change to Static or Shared with -DCTE_LIBCTL_LINK_MODE=<choise>")
     set(CTE_LIBCTL_LINK_MODE_TMP "Submodule")
 else()
     set(CTE_LIBCTL_LINK_MODE_TMP ${CTE_LIBCTL_LINK_MODE})
 endif()
-set(CTE_LIBCTL_LINK_MODE ${CTE_LIBCTL_LINK_MODE_TMP} CACHE STRING "Choose how to link to libctl. Options are: Submodule, Static or Dynamic" FORCE)
+set(CTE_LIBCTL_LINK_MODE ${CTE_LIBCTL_LINK_MODE_TMP} CACHE STRING "Choose how to link to libctl. Options are: Submodule, Static or Shared" FORCE)
 
 # We need the PkgConfig cmake module to be able to find libraries we depend on
 find_package(PkgConfig REQUIRED)
@@ -78,7 +78,7 @@ if(CTE_LIBCTL_LINK_MODE STREQUAL "Submodule")
     set(CTL_LIBRARIES ctl)
 elseif(CTE_LIBCTL_LINK_MODE STREQUAL "Static")
     pkg_check_modules(CTL REQUIRED libctl-static>=1)
-elseif(CTE_LIBCTL_LINK_MODE STREQUAL "Dynamic")
+elseif(CTE_LIBCTL_LINK_MODE STREQUAL "Shared")
     pkg_check_modules(CTL REQUIRED libctl>=1)
 else()
     message(FATAL_ERROR "CTE_LIBCTL_LINK_MODE set to unknown value: ${CTE_LIBCTL_LINK_MODE}")
