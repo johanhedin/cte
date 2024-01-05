@@ -9,7 +9,7 @@ Download and build
 ----
 Clone `cte` from GitHub with the needed submodules:
 
-    $ git clone --recurse-submodules https://github.com/johanhedin/ctl.git
+    $ git clone --recurse-submodules https://github.com/johanhedin/cte.git
     $ cd cte
 
 and then build with cmake:
