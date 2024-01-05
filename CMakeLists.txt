@@ -90,6 +90,9 @@ target_link_libraries(cte ${CTL_LIBRARIES})
 # Add support for installing our program
 install(TARGETS cte RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
 
+# Touch install manifest so that it does not get owned by root on sudo make install
+file(TOUCH "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt")
+
 # Dump our config for review
 message(STATUS "The following build options will be used for cte:")
 message(STATUS "    CTE_LIBCTL_LINK_MODE=${CTE_LIBCTL_LINK_MODE}")
