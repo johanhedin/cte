@@ -1,5 +1,6 @@
 cte
 ====
+[![Build](https://github.com/johanhedin/cte/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/johanhedin/cte/actions/workflows/c-cpp.yml)
 
 `cte` is a simple template for how to build a C executable with cmake. It include
 config for how to link to another library in three different ways: in-tree, static
