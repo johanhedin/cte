@@ -32,19 +32,19 @@ jobs:
         run: cd build && make && sudo make install && sudo make uninstall
 
       - name: Configure libctl as static
-        run: cd ctl && cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCTL_LINK_TYPE=Static
+        run: cd ctl && rm -rf build && cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCTL_LINK_TYPE=Static
 
       - name: Build and install libctl as static
         run: cd ctl/build && make && sudo make install
 
-      - name: Configure cte tobuild with static linking to libctl
+      - name: Configure cte to build with static linking to libctl
         run: rm -rf build ; cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCTE_LIBCTL_LINK_MODE=Static
 
       - name: Build and install cte with static linking to libctl
         run: cd build && make && sudo make install && sudo make uninstall
 
       - name: Configure libctl as shared
-        run: cd ctl && cmake -B build -DCMAKE_BUILD_TYPE=Release -DCTL_LINK_TYPE=Shared
+        run: cd ctl && rm -rf build && cmake -B build -DCMAKE_BUILD_TYPE=Release -DCTL_LINK_TYPE=Shared
 
       - name: Build and install libctl as shared
         run: cd ctl/build && make && sudo make install
