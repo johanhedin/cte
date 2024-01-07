@@ -43,6 +43,9 @@ jobs:
       - name: Build and install cte with static linking to libctl
         run: cd build && make && sudo make install && sudo make uninstall
 
+      - name: Uninstall static libctl
+        run: cd ctl/build && sudo make uninstall
+
       - name: Configure libctl as shared
         run: cd ctl && rm -rf build && cmake -B build -DCMAKE_BUILD_TYPE=Release -DCTL_LINK_TYPE=Shared
 
@@ -54,3 +57,6 @@ jobs:
 
       - name: Build and install cte with shared linking to libctl
         run: cd build && make && sudo make install && sudo make uninstall
+
+      - name: Uninstall shared libctl
+        run: cd ctl/build && sudo make uninstall
