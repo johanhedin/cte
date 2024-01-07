@@ -45,6 +45,28 @@ if(NOT TARGET uninstall)
     add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 endif()
 
+# Add libctl to our program depending on how to link
+if(CTE_LIBCTL_LINK_MODE STREQUAL "Submodule")
+    set(CTL_LINK_TYPE "Intree" CACHE STRING "" FORCE)
+    mark_as_advanced(CTL_LINK_TYPE)
+    add_subdirectory(ctl EXCLUDE_FROM_ALL)
+    set(CTL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/ctl/include)
+    set(CTL_LIBRARY_DIRS "")
+    set(CTL_LIBRARIES ctl)
+elseif(CTE_LIBCTL_LINK_MODE STREQUAL "Static")
+    pkg_check_modules(CTL REQUIRED libctl-static>=1)
+elseif(CTE_LIBCTL_LINK_MODE STREQUAL "Shared")
+    pkg_check_modules(CTL REQUIRED libctl>=1)
+else()
+    message(FATAL_ERROR "CTE_LIBCTL_LINK_MODE set to unknown value: ${CTE_LIBCTL_LINK_MODE}")
+endif()
+
+# target_link_directories() used further down does not exist in cmake < 3.13.
+# Use link_directories instead. Must be set befor any targets (e.g. add_executable())
+if(CMAKE_VERSION VERSION_LESS "3.13")
+    link_directories(${CTL_LIBRARY_DIRS})
+endif()
+
 # Define a target for our program
 add_executable(cte src/cte.c)
 
@@ -68,30 +90,18 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 else()
 endif()
 
-# Add libctl to our program depending on how to link
-if(CTE_LIBCTL_LINK_MODE STREQUAL "Submodule")
-    set(CTL_LINK_TYPE "Intree" CACHE STRING "" FORCE)
-    mark_as_advanced(CTL_LINK_TYPE)
-    add_subdirectory(ctl EXCLUDE_FROM_ALL)
-    set(CTL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/ctl/include)
-    set(CTL_LIBRARY_DIRS "")
-    set(CTL_LIBRARIES ctl)
-elseif(CTE_LIBCTL_LINK_MODE STREQUAL "Static")
-    pkg_check_modules(CTL REQUIRED libctl-static>=1)
-elseif(CTE_LIBCTL_LINK_MODE STREQUAL "Shared")
-    pkg_check_modules(CTL REQUIRED libctl>=1)
-else()
-    message(FATAL_ERROR "CTE_LIBCTL_LINK_MODE set to unknown value: ${CTE_LIBCTL_LINK_MODE}")
-endif()
+# Add include and libs to target
 target_include_directories(cte PUBLIC ${CTL_INCLUDE_DIRS})
-target_link_directories(cte PUBLIC ${CTL_LIBRARY_DIRS})
+if(CMAKE_VERSION VERSION_GREATER "3.12")
+    target_link_directories(cte PUBLIC ${CTL_LIBRARY_DIRS})
+endif()
 target_link_libraries(cte ${CTL_LIBRARIES})
 
 # Add support for installing our program
 install(TARGETS cte RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
 
-# Touch install manifest so that it does not get owned by root on sudo make install
-file(TOUCH "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt")
+# Create empty install_manifest.txt so that it does not get owned by root on sudo make install
+file(COPY "${PROJECT_SOURCE_DIR}/cmake/install_manifest.txt" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Dump our config for review
 message(STATUS "The following build options will be used for cte:")
