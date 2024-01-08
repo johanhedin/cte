@@ -101,7 +101,7 @@ target_link_libraries(cte ${CTL_LIBRARIES})
 install(TARGETS cte RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
 
 # Create empty install_manifest.txt so that it does not get owned by root on sudo make install
-file(COPY "${PROJECT_SOURCE_DIR}/cmake/install_manifest.txt" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+execute_process(COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt")
 
 # Dump our config for review
 message(STATUS "The following build options will be used for cte:")
